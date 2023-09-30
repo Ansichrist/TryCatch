@@ -9,8 +9,8 @@ GCC >=C89 supported
 You can't '_return_' from _TRY_ block  
 '_break_' from _CATCH_ has no effect  
 Сode inside _THROW_ and _CATCH_ must be identical  
-`THROW(const char*&nbsp;c)` != `CATCH(const char *c)`   
-`THROW(const char *c)` == `CATCH(const char *c)`  
+THROW(const char*&nbsp;c)` != `CATCH(const char *c)   
+THROW(const char *c)` == `CATCH(const char *c)  
 
 ## Example
 ```c
