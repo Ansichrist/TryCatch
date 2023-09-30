@@ -1,16 +1,16 @@
 ## Description
-Thread safe _**try-сatch**_ statement in C. 
-Nested _TRY_ supported. 
-Optional _FINALLY_. 
-_CATCH_ can also be used for signal handling. 
-GCC >=C89 supported. 
+Thread safe _**try-сatch**_ statement in C  
+Nested _TRY_ supported  
+Optional _FINALLY_  
+_CATCH_ can also be used for signal handling  
+GCC >=C89 supported  
 
 ### Warnings:
-You can't '_return_' from _TRY_ block. 
-'_break_' from _CATCH_ has no effect. 
-Сode inside _THROW_ and _CATCH_ must be identical. 
-```cTHROW(const char *c) != CATCH(const char* c)```
-```cTHROW(const char *c) == CATCH(const char *c)```
+You can't '_return_' from _TRY_ block  
+'_break_' from _CATCH_ has no effect  
+Сode inside _THROW_ and _CATCH_ must be identical  
+```c THROW(const char *c) != CATCH(const char* c)```  
+```c THROW(const char *c) == CATCH(const char *c)```  
 
 ## Example
 ```c
