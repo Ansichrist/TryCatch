@@ -50,6 +50,5 @@ rmo:
 
 clean:
 	rm $(OBJECTS) \
-	   *.map \
 	   $(TARGET)
 

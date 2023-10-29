@@ -11,23 +11,24 @@
 
 
 typedef struct{ const char *type, *where; void *data; }_t_EXCEPTION;
-typedef struct{ jmp_buf *jmp; _t_EXCEPTION e[1]; char buffer[64+7], final;}_t_TRYCATCH;
+typedef struct{ jmp_buf *jmp; _t_EXCEPTION e[1]; char buffer[95], final;}_t_TRYCATCH;
 _t_TRYCATCH *_tryCatch();
 #define _CATCH(...) {__VA_ARGS__ break;}}
 #define _CATCH0() else{ _CATCH
 #define _CATCH1(_type_) else if( !strcmp(EXCEPTION->type,#_type_) ) { _CATCH
 #define _CATCH2(_type_,_var_) else if( !strcmp(EXCEPTION->type,#_type_) ) { _type_ _var_= *(_type_*)(EXCEPTION->data); _CATCH
 #define _THROW_INFO MACROS_FILE() ":" MACROS_STRING(MACROS_LINE())
-#define _THROW0() do{\
+#define _THROW0() ({\
     _t_TRYCATCH *_1_=_tryCatch();\
     if(_1_){\
-        if(_1_->jmp) longjmp(*_1_->jmp,1);\
-        else if(_1_->e->type) printf("\nterminate called after throwing an instance of \'%s\' at [%s]\n\n",_1_->e->type,_1_->e->where);\
-        else printf("\nterminate called after throwing at [" _THROW_INFO "]\n\n");\
+        if(_1_->e->type){\
+            if(_1_->jmp) longjmp(*_1_->jmp,1);\
+            else printf("\nterminate called after throwing an instance of \'%s\' at [%s]\n\n",_1_->e->type,_1_->e->where);\
+        }else printf("\nterminate called after throwing at [" _THROW_INFO "]\n\n");\
     }else printf("\nterminate called after throwing at [" _THROW_INFO "]\n\n");\
     exit(-1);\
-}while(0)
-#define _THROW1(_t_,...) do{\
+})
+#define _THROW1(_t_,...) ({\
     _t_TRYCATCH *_1_=_tryCatch();\
     if(_1_ && _1_->jmp){\
         _1_->e->type=#_t_; _1_->e->where=_THROW_INFO;\
@@ -38,18 +39,20 @@ _t_TRYCATCH *_tryCatch();
         )\
     }printf("\nterminate called after throwing an instance of \'" #_t_ "\' at [" _THROW_INFO "]\n\n");\
     exit(-1);\
-}while(0)
+})
 
 static struct{
-    void(*sig)();
+    void(*f)(void *arg);
+    void *arg;
     _t_TRYCATCH *main;
     pthread_t id;
     pthread_key_t key;
     char init;
-}_tc={NULL};
+}_tc={};
 
-void _tryCatchSetSigHandler(void(*function)()){
-    _tc.sig=function;
+
+void tryCatchSetSignalInitializer(void(*f)(void *arg),void *arg){
+    _tc.f=f; _tc.arg=arg;
 }
 
 void _tryCatchDeleter(_t_TRYCATCH *s){
@@ -76,34 +79,32 @@ _t_TRYCATCH *_tryCatch(){
         if(pthread_setspecific(_tc.key,s)){
             free(s); s=NULL;
         }else{
-            if(_tc.sig) _tc.sig();
             if(pthread_equal(pthread_self(),_tc.id))
                 _tc.main=s;
             memset(s,0,sizeof(*s));
+            if(_tc.f) _tc.f(_tc.arg);
         }
     }
     return s;
 }
+
 
 typedef struct{
     int sigNum;
     void *address;
 }E_SIGFAULT;
 
-#define TRY(...)     if( ({jmp_buf _1tc_; _t_TRYCATCH *_2tc_=_tryCatch(); void *_3tc_=_2tc_->jmp; char _4tc_; _2tc_->jmp=&_1tc_; if( (_4tc_=!setjmp(_1tc_)) ){__VA_ARGS__} _2tc_->jmp=_3tc_; _2tc_->final=!_4tc_; _4tc_;}) );else for(;;({THROW();})) if(0);
+#define TRY(...)     if( ({jmp_buf _1tc_; _t_TRYCATCH *_2tc_=_tryCatch(); void *_3tc_=_2tc_->jmp; char _4tc_; _2tc_->jmp=&_1tc_; if( (_4tc_=!setjmp(_1tc_)) )do{__VA_ARGS__}while(0); _2tc_->jmp=_3tc_; _2tc_->final=!_4tc_; _4tc_;}) );else for(;;THROW()) if(0);
 #define CATCH(...)   MACROS_OVERLOAD_CALL(_CATCH,__VA_ARGS__)
 #define FINALLY(...) if( ({char *_1tc_=&_tryCatch()->final; char _2tc_=*_1tc_; *_1tc_=0; _2tc_;}) ){__VA_ARGS__}
 #define THROW(...)   MACROS_OVERLOAD_01_CALL(_THROW,__VA_ARGS__)
 #define EXCEPTION    ((const _t_EXCEPTION*)(_tryCatch()->e))
+#define DEBUG(...)   TRY(__VA_ARGS__)CATCH()(printf("\nDEBUG[%s:%d] %s at %s\n",MACROS_FILE(),MACROS_LINE(),EXCEPTION->type,EXCEPTION->where); getchar();)
 
-void _tryCatchSetSigHandler(void(*function)());
-
-
+void tryCatchSetSignalInitializer(void(*f)(void *arg),void *arg);
 
 
 
 #endif // TC_H
-
-
 
 
